@@ -55,23 +55,6 @@ export default async (request) => {
     return json({ posts: await writePosts(nextPosts) });
   }
 
-  if (body.action === "toggleBoost") {
-    const nextPosts = posts.map((post) => {
-      if (post.id !== body.postId) {
-        return post;
-      }
-
-      const resharedBy = post.resharedBy || [];
-      const reshared = resharedBy.includes(body.email);
-      return {
-        ...post,
-        resharedBy: reshared ? resharedBy.filter((email) => email !== body.email) : [...resharedBy, body.email],
-      };
-    });
-
-    return json({ posts: await writePosts(nextPosts) });
-  }
-
   if (body.action === "report") {
     const nextPosts = posts.map((post) => {
       if (post.id !== body.postId) {
@@ -116,15 +99,7 @@ export default async (request) => {
 
   if (body.action === "updateAuthor") {
     const nextPosts = posts.map((post) =>
-      post.ownerEmail === body.email
-        ? {
-            ...post,
-            author: body.name,
-            authorAvatarText: body.avatarText,
-            authorAvatarColor: body.avatarColor,
-            authorAvatarImage: body.avatarImage,
-          }
-        : post,
+      post.ownerEmail === body.email ? { ...post, author: body.name } : post,
     );
 
     return json({ posts: await writePosts(nextPosts) });
