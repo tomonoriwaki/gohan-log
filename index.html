@@ -3,58 +3,56 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ごはんログ</title>
+    <title>もぐログ</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="app-header">
+    <button class="chrome-toggle" type="button" id="chromeToggle" aria-expanded="true">
+      上の画面を隠す
+    </button>
+
+    <header class="app-header" id="appHeader">
       <div>
-        <p class="eyebrow">Gohan Log</p>
-        <h1>ごはんログ</h1>
+        <p class="eyebrow">Mogu Log</p>
+        <h1>もぐログ</h1>
       </div>
       <div class="header-actions">
         <button class="header-button" type="button" id="focusPostButton">投稿する</button>
-        <button class="header-button account" type="button" id="accountButton">アカウント作成</button>
+        <button class="header-button soft" type="button" id="focusDeleteButton">削除する</button>
+        <label class="sound-switch" title="効果音のオン・オフ">
+          <input id="soundToggle" type="checkbox" />
+          <span>効果音</span>
+        </label>
       </div>
     </header>
 
     <main class="shell">
       <aside class="app-nav" aria-label="メインメニュー">
-        <button class="nav-button is-active" type="button" data-nav="home" title="ホーム" aria-label="ホーム">
-          <span id="homeNavIcon">⌂</span>
-        </button>
-        <button class="nav-button" type="button" data-nav="search" title="検索" aria-label="検索">⌕</button>
-        <button class="nav-button" type="button" data-nav="liked" title="いいね" aria-label="いいね">♡</button>
-        <button class="nav-button" type="button" data-nav="profile" title="プロフィール" aria-label="プロフィール">◉</button>
-        <button class="nav-button" type="button" data-nav="settings" title="設定" aria-label="設定">⚙</button>
+        <button class="nav-button is-active" type="button" data-jump="feed" title="投稿一覧">⌂</button>
+        <button class="nav-button" type="button" data-jump="composer" title="投稿する">＋</button>
+        <button class="nav-button" type="button" data-jump="search" title="検索">⌕</button>
+        <button class="nav-button" type="button" data-jump="settings" title="設定">♪</button>
       </aside>
 
-      <section class="intro" aria-label="アプリ概要">
-        <div class="intro-copy">
-          <p class="eyebrow">今日の一皿を残す</p>
-          <h2>食べたご飯を、写真で気軽に共有。</h2>
-          <p>和の落ち着きと、毎日使いやすいシンプルさを大切にした食事写真の共有アプリです。</p>
-        </div>
-        <div class="intro-panel" aria-label="投稿数">
-          <span id="postCount">3</span>
-          <small>件の投稿</small>
-        </div>
-      </section>
-
-      <section class="account-strip" aria-label="ログイン状態">
-        <div class="current-avatar" id="currentAvatar" aria-hidden="true">G</div>
+      <section class="intro">
         <div>
-          <p class="eyebrow">Account</p>
-          <strong id="currentUserLabel">未ログイン</strong>
-          <p class="profile-bio" id="currentUserBio">アカウントを作成すると、プロフィールを設定できます。</p>
+          <p class="eyebrow">Mogu Moment</p>
+          <h2>おいしかった瞬間を、写真つきで気軽に残そう。</h2>
+          <p>
+            投稿前に画像を確認して、明るさや色味を少し整えてから投稿できます。
+            位置情報を付けたり、気に入った投稿を「もぐもぐ」できます。
+          </p>
         </div>
-        <button class="text-button" type="button" id="logoutButton" hidden>ログアウト</button>
+        <div class="intro-counter">
+          <strong id="postCount">0</strong>
+          <span>件の投稿</span>
+        </div>
       </section>
 
-      <section class="composer" aria-label="ご飯を投稿する">
+      <section class="composer" id="composer" aria-label="ごはんを投稿する">
         <div class="section-heading">
           <p class="eyebrow">Post</p>
-          <h2>ご飯を投稿する</h2>
+          <h2>投稿する</h2>
         </div>
 
         <form id="postForm">
@@ -65,30 +63,58 @@
 
           <label>
             タイトル
-            <input id="titleInput" type="text" placeholder="例：炭火焼き鮭の定食" required />
+            <input id="titleInput" type="text" placeholder="例: ふわふわ卵のオムライス" required />
           </label>
 
-          <label>
-            説明文
-            <textarea id="descriptionInput" placeholder="例：昼休みに見つけた小さな定食屋さん。味噌汁が最高でした。" required></textarea>
+          <label class="wide">
+            コメント
+            <textarea id="descriptionInput" placeholder="味、場所、また食べたいポイントなど" required></textarea>
           </label>
 
-          <div class="location-toggle">
+          <div class="location-toggle wide">
             <label class="switch-row">
               <input id="locationToggle" type="checkbox" />
-              <span>お店・位置情報を追加する</span>
+              <span>位置情報を付ける</span>
             </label>
-            <small>デフォルトはオフです。オンにした投稿だけ位置情報を使います。</small>
+            <small>お店の名前だけでもOKです。現在地ボタンを押すと地図リンクも付きます。</small>
           </div>
 
-          <div class="location-fields" id="locationFields" hidden>
+          <div class="location-fields wide" id="locationFields" hidden>
             <label>
-              お店の名前
-              <input id="shopNameInput" type="text" placeholder="例：銀座 ごはん処" />
+              お店・場所の名前
+              <input id="shopNameInput" type="text" placeholder="例: 駅前の定食屋さん" />
             </label>
             <div class="location-actions">
               <button class="secondary-button" type="button" id="getLocationButton">現在地を取得</button>
-              <span id="locationStatus">位置情報は未取得です。</span>
+              <span id="locationStatus">位置情報はまだ取得していません。</span>
+            </div>
+          </div>
+
+          <div class="image-editor wide" id="imageEditor" hidden>
+            <div class="preview-frame">
+              <canvas id="previewCanvas" width="900" height="675" aria-label="投稿画像のプレビュー"></canvas>
+            </div>
+            <div class="editor-controls">
+              <label>
+                明るさ
+                <input id="brightnessInput" type="range" min="70" max="130" value="100" />
+              </label>
+              <label>
+                くっきり
+                <input id="contrastInput" type="range" min="70" max="140" value="105" />
+              </label>
+              <label>
+                彩度
+                <input id="saturationInput" type="range" min="60" max="150" value="110" />
+              </label>
+              <label>
+                あたたかさ
+                <input id="warmthInput" type="range" min="0" max="40" value="10" />
+              </label>
+              <div class="editor-buttons">
+                <button class="secondary-button" type="button" id="rotateButton">回転</button>
+                <button class="secondary-button" type="button" id="resetImageButton">リセット</button>
+              </div>
             </div>
           </div>
 
@@ -96,130 +122,49 @@
         </form>
       </section>
 
-      <section class="feed-section" aria-label="投稿一覧">
+      <section class="feed-section" id="feedSection" aria-label="投稿一覧">
         <div class="section-heading feed-heading">
           <div>
             <p class="eyebrow">Timeline</p>
-            <h2 id="feedTitle">タイムライン</h2>
+            <h2>投稿一覧</h2>
           </div>
-          <div class="search-box">
-            <input id="searchInput" type="search" placeholder="食べ物を検索" />
-          </div>
-        </div>
-
-        <div class="tabs" role="tablist" aria-label="表示切替">
-          <button class="tab-button is-active" type="button" data-view="timeline">タイムライン</button>
-          <button class="tab-button" type="button" data-view="liked">いいね</button>
-          <button class="tab-button" type="button" data-view="search">検索</button>
+          <label class="search-box" id="searchBox">
+            <span>検索</span>
+            <input id="searchInput" type="search" placeholder="料理名・コメント・場所で探す" />
+          </label>
         </div>
 
         <div class="feed" id="feed"></div>
-        <p class="empty-state" id="emptyState" hidden>表示できる投稿がありません。</p>
+        <p class="empty-state" id="emptyState" hidden>まだ表示できる投稿がありません。</p>
+      </section>
+
+      <section class="settings" id="settingsSection" aria-label="設定">
+        <div class="section-heading">
+          <p class="eyebrow">Settings</p>
+          <h2>設定</h2>
+        </div>
+        <div class="settings-grid">
+          <label class="setting-card">
+            <input id="soundTogglePanel" type="checkbox" />
+            <span>
+              <strong>効果音</strong>
+              <small>いいね、もぐもぐ、投稿のときに小さな音を鳴らします。</small>
+            </span>
+          </label>
+          <button class="setting-card button-card" type="button" id="chromeTogglePanel">
+            <strong>上の画面を隠す/表示</strong>
+            <small>「もぐログ」「投稿する」「削除する」のバーを切り替えます。</small>
+          </button>
+        </div>
       </section>
     </main>
 
-    <dialog class="account-dialog" id="accountDialog">
-      <form method="dialog" class="dialog-card" id="accountForm">
-        <div class="section-heading">
-          <p class="eyebrow">Account</p>
-          <h2>アカウント作成</h2>
-        </div>
-        <label>
-          表示名
-          <input id="nameInput" type="text" placeholder="例：nori" required />
-        </label>
-        <label>
-          メールアドレス
-          <input id="emailInput" type="email" placeholder="you@example.com" required />
-        </label>
-        <label>
-          パスワード
-          <input id="passwordInput" type="password" minlength="6" placeholder="6文字以上" required />
-        </label>
-        <p class="dialog-note">今は試作品のため、この登録情報は自分のブラウザ内だけに保存されます。</p>
-        <label class="switch-row">
-          <input id="termsInput" type="checkbox" required />
-          <span>利用ルールとプライバシー注意に同意します</span>
-        </label>
-        <div class="dialog-actions">
-          <button class="secondary-button" type="button" id="closeAccountButton">閉じる</button>
-          <button class="primary-button compact" type="submit">登録してログイン</button>
-        </div>
-      </form>
-    </dialog>
-
-    <dialog class="account-dialog" id="profileDialog">
-      <form method="dialog" class="dialog-card" id="profileForm">
-        <div class="section-heading">
-          <p class="eyebrow">Profile</p>
-          <h2>プロフィール設定</h2>
-        </div>
-        <label>
-          表示名
-          <input id="profileNameInput" type="text" required />
-        </label>
-        <label>
-          自己紹介
-          <textarea id="profileBioInput" placeholder="例：ラーメンと定食が好きです。"></textarea>
-        </label>
-        <label>
-          アイコン文字
-          <input id="profileIconInput" type="text" maxlength="2" placeholder="例：ご" />
-        </label>
-        <div class="avatar-editor">
-          <label>
-            アイコン画像
-            <input id="avatarImageInput" type="file" accept="image/*" />
-          </label>
-          <div class="avatar-preview-wrap">
-            <canvas id="avatarCanvas" width="180" height="180" aria-label="アイコン画像プレビュー"></canvas>
-          </div>
-          <label>
-            拡大
-            <input id="avatarZoomInput" type="range" min="1" max="3" step="0.05" value="1" />
-          </label>
-          <label>
-            横位置
-            <input id="avatarXInput" type="range" min="-100" max="100" step="1" value="0" />
-          </label>
-          <label>
-            縦位置
-            <input id="avatarYInput" type="range" min="-100" max="100" step="1" value="0" />
-          </label>
-        </div>
-        <div class="setting-group">
-          <p class="setting-label">アイコン色</p>
-          <div class="swatches" id="colorSwatches" aria-label="アイコン色">
-            <button class="swatch is-selected" type="button" data-color="#2b2a27" style="--swatch: #2b2a27" aria-label="墨色"></button>
-            <button class="swatch" type="button" data-color="#49624d" style="--swatch: #49624d" aria-label="苔色"></button>
-            <button class="swatch" type="button" data-color="#9d3d2e" style="--swatch: #9d3d2e" aria-label="漆色"></button>
-            <button class="swatch" type="button" data-color="#755b35" style="--swatch: #755b35" aria-label="土色"></button>
-          </div>
-        </div>
-        <label>
-          ホームタイムラインのアイコン
-          <select id="homeIconInput">
-            <option value="⌂">家</option>
-            <option value="◎">丸</option>
-            <option value="米">米</option>
-            <option value="食">食</option>
-          </select>
-        </label>
-        <div class="dialog-actions">
-          <button class="secondary-button" type="button" id="closeProfileButton">閉じる</button>
-          <button class="primary-button compact" type="submit">保存する</button>
-        </div>
-      </form>
-    </dialog>
-
     <template id="postTemplate">
       <article class="post-card">
-        <div class="timeline-avatar" aria-hidden="true"></div>
-        <div class="post-bubble">
-          <img class="post-image" alt="" />
-          <div class="post-body">
+        <img class="post-image" alt="" />
+        <div class="post-body">
           <div class="post-meta">
-            <span class="author"></span>
+            <span class="author">mogu</span>
             <span class="time"></span>
           </div>
           <h3></h3>
@@ -231,17 +176,14 @@
           <div class="post-actions">
             <button class="like-button" type="button" aria-label="いいねする">
               <span class="heart">♡</span>
-              <span class="like-count"></span>
+              <span class="like-count">0</span>
             </button>
-            <button class="boost-button" type="button" aria-label="めっちゃうまそう！やな！">
-              <span class="shamoji">杓</span>
-              <span class="boost-count"></span>
+            <button class="boost-button" type="button" aria-label="もぐもぐする">
+              <span>🍚</span>
+              <span class="boost-count">0</span>
             </button>
             <button class="share-button" type="button">共有</button>
-            <button class="report-button" type="button">通報</button>
-            <button class="hide-button" type="button">非表示</button>
             <button class="delete-button" type="button">削除</button>
-          </div>
           </div>
         </div>
       </article>
