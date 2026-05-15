@@ -75,12 +75,20 @@ const profileForm = document.querySelector("#profileForm");
 const profileNameInput = document.querySelector("#profileNameInput");
 const profileBioInput = document.querySelector("#profileBioInput");
 const profileIconInput = document.querySelector("#profileIconInput");
+const avatarImageInput = document.querySelector("#avatarImageInput");
+const avatarCanvas = document.querySelector("#avatarCanvas");
+const avatarZoomInput = document.querySelector("#avatarZoomInput");
+const avatarXInput = document.querySelector("#avatarXInput");
+const avatarYInput = document.querySelector("#avatarYInput");
 const homeIconInput = document.querySelector("#homeIconInput");
 const homeNavIcon = document.querySelector("#homeNavIcon");
 const closeProfileButton = document.querySelector("#closeProfileButton");
 const swatches = document.querySelectorAll(".swatch");
 
 let selectedProfileColor = "#2b2a27";
+let avatarSourceImage = null;
+let selectedAvatarDataUrl = "";
+let avatarImageChanged = false;
 
 let posts = loadPosts();
 let users = loadUsers();
@@ -179,9 +187,13 @@ function normalizePost(post) {
     ...post,
     id: post.id || crypto.randomUUID(),
     likedBy: post.likedBy || [],
+    resharedBy: post.resharedBy || [],
     reports: post.reports || [],
     hidden: Boolean(post.hidden),
     location: post.location || null,
+    authorAvatarText: post.authorAvatarText || "",
+    authorAvatarColor: post.authorAvatarColor || "#2b2a27",
+    authorAvatarImage: post.authorAvatarImage || "",
   };
 }
 
@@ -194,6 +206,7 @@ function normalizeUser(user) {
     bio: user.bio || "",
     avatarText: user.avatarText || getInitials(fallbackName) || "G",
     avatarColor: user.avatarColor || "#2b2a27",
+    avatarImage: user.avatarImage || "",
     homeIcon: user.homeIcon || "⌂",
   };
 }
@@ -241,8 +254,7 @@ function updateAccountView() {
   if (!currentUser) {
     currentUserLabel.textContent = "未ログイン";
     currentUserBio.textContent = "アカウントを作成すると、プロフィールを設定できます。";
-    currentAvatar.textContent = "G";
-    currentAvatar.style.background = "#2b2a27";
+    setAvatarElement(currentAvatar, { avatarText: "G", avatarColor: "#2b2a27", avatarImage: "" });
     homeNavIcon.textContent = "⌂";
     accountButton.textContent = "アカウント作成";
     logoutButton.hidden = true;
@@ -251,11 +263,25 @@ function updateAccountView() {
 
   currentUserLabel.textContent = `${currentUser.name}（${currentUser.email}）`;
   currentUserBio.textContent = currentUser.bio || "プロフィール設定から自己紹介を追加できます。";
-  currentAvatar.textContent = currentUser.avatarText || getInitials(currentUser.name);
-  currentAvatar.style.background = currentUser.avatarColor;
+  setAvatarElement(currentAvatar, currentUser);
   homeNavIcon.textContent = currentUser.homeIcon;
   accountButton.textContent = "アカウント";
   logoutButton.hidden = false;
+}
+
+function setAvatarElement(element, avatar) {
+  element.innerHTML = "";
+  element.style.background = avatar.avatarColor || "#2b2a27";
+
+  if (avatar.avatarImage) {
+    const image = document.createElement("img");
+    image.src = avatar.avatarImage;
+    image.alt = "";
+    element.append(image);
+    return;
+  }
+
+  element.textContent = avatar.avatarText || "G";
 }
 
 function getInitials(name) {
@@ -280,12 +306,69 @@ function openProfileSettings() {
   profileNameInput.value = currentUser.name;
   profileBioInput.value = currentUser.bio;
   profileIconInput.value = currentUser.avatarText;
+  selectedAvatarDataUrl = currentUser.avatarImage || "";
+  avatarImageChanged = false;
+  avatarImageInput.value = "";
+  avatarZoomInput.value = "1";
+  avatarXInput.value = "0";
+  avatarYInput.value = "0";
+  avatarSourceImage = null;
+  drawAvatarPreview();
   homeIconInput.value = currentUser.homeIcon;
   selectedProfileColor = currentUser.avatarColor;
   swatches.forEach((swatch) => {
     swatch.classList.toggle("is-selected", swatch.dataset.color === selectedProfileColor);
   });
   profileDialog.showModal();
+}
+
+function drawAvatarPreview() {
+  const context = avatarCanvas.getContext("2d");
+  const size = avatarCanvas.width;
+
+  context.clearRect(0, 0, size, size);
+  context.save();
+  context.beginPath();
+  context.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  context.clip();
+  context.fillStyle = selectedProfileColor;
+  context.fillRect(0, 0, size, size);
+
+  if (avatarSourceImage) {
+    const zoom = Number(avatarZoomInput.value);
+    const offsetX = Number(avatarXInput.value);
+    const offsetY = Number(avatarYInput.value);
+    const scale = Math.max(size / avatarSourceImage.width, size / avatarSourceImage.height) * zoom;
+    const width = avatarSourceImage.width * scale;
+    const height = avatarSourceImage.height * scale;
+    const x = (size - width) / 2 + offsetX;
+    const y = (size - height) / 2 + offsetY;
+    context.drawImage(avatarSourceImage, x, y, width, height);
+  } else if (selectedAvatarDataUrl) {
+    const image = new Image();
+    image.addEventListener("load", () => {
+      avatarSourceImage = image;
+      drawAvatarPreview();
+    });
+    image.src = selectedAvatarDataUrl;
+  } else {
+    context.fillStyle = "#fffaf2";
+    context.font = "800 72px sans-serif";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(profileIconInput.value.trim() || getInitials(profileNameInput.value.trim()) || "G", size / 2, size / 2);
+  }
+
+  context.restore();
+}
+
+function getEditedAvatarDataUrl() {
+  if (!avatarSourceImage && !selectedAvatarDataUrl) {
+    return "";
+  }
+
+  drawAvatarPreview();
+  return avatarCanvas.toDataURL("image/png");
 }
 
 function renderPosts() {
@@ -307,6 +390,9 @@ function renderPosts() {
     const likeButton = card.querySelector(".like-button");
     const likeCount = card.querySelector(".like-count");
     const heart = card.querySelector(".heart");
+    const boostButton = card.querySelector(".boost-button");
+    const boostCount = card.querySelector(".boost-count");
+    const shareButton = card.querySelector(".share-button");
     const reportButton = card.querySelector(".report-button");
     const hideButton = card.querySelector(".hide-button");
     const deleteButton = card.querySelector(".delete-button");
@@ -314,11 +400,15 @@ function renderPosts() {
     const shopName = card.querySelector(".shop-name");
     const mapLink = card.querySelector(".map-link");
     const liked = currentUser ? post.likedBy.includes(currentUser.email) : false;
+    const boosted = currentUser ? post.resharedBy.includes(currentUser.email) : false;
     const canDelete = currentUser && (post.ownerEmail === currentUser.email || currentUser.isAdmin);
     const postUser = getPostUser(post);
 
-    avatar.textContent = postUser?.avatarText || getInitials(post.author);
-    avatar.style.background = postUser?.avatarColor || "#2b2a27";
+    setAvatarElement(avatar, {
+      avatarText: postUser?.avatarText || post.authorAvatarText || getInitials(post.author),
+      avatarColor: postUser?.avatarColor || post.authorAvatarColor || "#2b2a27",
+      avatarImage: postUser?.avatarImage || post.authorAvatarImage || "",
+    });
     image.src = post.image;
     image.alt = `${post.title}の写真`;
     title.textContent = post.title;
@@ -328,6 +418,8 @@ function renderPosts() {
     likeCount.textContent = post.likedBy.length;
     heart.textContent = liked ? "♥" : "♡";
     likeButton.classList.toggle("is-liked", liked);
+    boostCount.textContent = post.resharedBy.length;
+    boostButton.classList.toggle("is-boosted", boosted);
     deleteButton.hidden = !canDelete;
     hideButton.hidden = !currentUser?.isAdmin || post.hidden;
     reportButton.textContent = post.reports?.includes(currentUser?.email) ? "通報済み" : "通報";
@@ -345,6 +437,8 @@ function renderPosts() {
     }
 
     likeButton.addEventListener("click", () => toggleLike(post.id));
+    boostButton.addEventListener("click", () => toggleBoost(post.id));
+    shareButton.addEventListener("click", () => sharePost(post));
     reportButton.addEventListener("click", () => reportPost(post.id));
     hideButton.addEventListener("click", () => hidePost(post.id));
     deleteButton.addEventListener("click", () => deletePost(post.id));
@@ -379,6 +473,55 @@ async function toggleLike(postId) {
     postId,
     email: currentUser.email,
   });
+}
+
+async function toggleBoost(postId) {
+  if (!currentUser) {
+    accountDialog.showModal();
+    return;
+  }
+
+  posts = posts.map((post) => {
+    if (post.id !== postId) {
+      return post;
+    }
+
+    const boosted = post.resharedBy.includes(currentUser.email);
+    return {
+      ...post,
+      resharedBy: boosted
+        ? post.resharedBy.filter((email) => email !== currentUser.email)
+        : [...post.resharedBy, currentUser.email],
+    };
+  });
+
+  savePosts();
+  renderPosts();
+  await requestSharedPosts("toggleBoost", {
+    postId,
+    email: currentUser.email,
+  });
+}
+
+async function sharePost(post) {
+  const shareText = `ごはんログ: ${post.title}`;
+  const shareUrl = location.href.split("#")[0];
+
+  if (navigator.share) {
+    await navigator.share({
+      title: post.title,
+      text: shareText,
+      url: shareUrl,
+    });
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+    alert("共有用の文章をコピーしました。");
+  } catch {
+    alert(`${shareText}\n${shareUrl}`);
+  }
 }
 
 async function deletePost(postId) {
@@ -476,8 +619,12 @@ async function createPost(imageUrl) {
     image: imageUrl,
     author: currentUser.name,
     ownerEmail: currentUser.email,
+    authorAvatarText: currentUser.avatarText,
+    authorAvatarColor: currentUser.avatarColor,
+    authorAvatarImage: currentUser.avatarImage,
     time: "たった今",
     likedBy: [],
+    resharedBy: [],
     reports: [],
     hidden: false,
     location: getPostLocation(),
@@ -608,7 +755,33 @@ swatches.forEach((swatch) => {
   swatch.addEventListener("click", () => {
     selectedProfileColor = swatch.dataset.color;
     swatches.forEach((item) => item.classList.toggle("is-selected", item === swatch));
+    drawAvatarPreview();
   });
+});
+
+avatarImageInput.addEventListener("change", () => {
+  const file = avatarImageInput.files[0];
+
+  if (!file) {
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    const image = new Image();
+    image.addEventListener("load", () => {
+      avatarSourceImage = image;
+      selectedAvatarDataUrl = reader.result;
+      avatarImageChanged = true;
+      drawAvatarPreview();
+    });
+    image.src = reader.result;
+  });
+  reader.readAsDataURL(file);
+});
+
+[avatarZoomInput, avatarXInput, avatarYInput, profileIconInput, profileNameInput].forEach((input) => {
+  input.addEventListener("input", drawAvatarPreview);
 });
 
 profileForm.addEventListener("submit", async (event) => {
@@ -620,18 +793,30 @@ profileForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  const editedAvatar = avatarImageChanged ? getEditedAvatarDataUrl() : "";
+  const avatarImage = editedAvatar ? await uploadSharedImage(editedAvatar) : currentUser.avatarImage;
+
   currentUser = normalizeUser({
     ...currentUser,
     name: profileNameInput.value.trim(),
     bio: profileBioInput.value.trim(),
     avatarText: profileIconInput.value.trim() || getInitials(profileNameInput.value.trim()),
     avatarColor: selectedProfileColor,
+    avatarImage,
     homeIcon: homeIconInput.value,
   });
 
   users = users.map((user) => (user.email === currentUser.email ? currentUser : user));
   posts = posts.map((post) =>
-    post.ownerEmail === currentUser.email ? { ...post, author: currentUser.name } : post,
+    post.ownerEmail === currentUser.email
+      ? {
+          ...post,
+          author: currentUser.name,
+          authorAvatarText: currentUser.avatarText,
+          authorAvatarColor: currentUser.avatarColor,
+          authorAvatarImage: currentUser.avatarImage,
+        }
+      : post,
   );
   saveUsers();
   saveSession();
@@ -641,6 +826,9 @@ profileForm.addEventListener("submit", async (event) => {
   await requestSharedPosts("updateAuthor", {
     email: currentUser.email,
     name: currentUser.name,
+    avatarText: currentUser.avatarText,
+    avatarColor: currentUser.avatarColor,
+    avatarImage: currentUser.avatarImage,
   });
 });
 
