@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>もぐログ</title>
+    <meta name="theme-color" content="#496b55" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="manifest" href="manifest.webmanifest" />
+  </head>
+  <body>
+    <button class="chrome-toggle" type="button" id="chromeToggle" aria-expanded="true">
+      上の画面を隠す
+    </button>
+
+    <header class="app-header" id="appHeader">
+      <div>
+        <p class="eyebrow">Mogu Log</p>
+        <h1>もぐログ</h1>
+      </div>
+      <div class="header-actions">
+        <button class="header-button" type="button" id="focusPostButton">投稿する</button>
+      </div>
+    </header>
+
+    <main class="shell">
+      <aside class="app-nav" aria-label="メインメニュー">
+        <button class="nav-button is-active" type="button" data-jump="feed" title="タイムライン">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">タイムライン</span>
+        </button>
+        <button class="nav-button" type="button" data-jump="search" title="検索">
+          <span class="nav-icon">🔍</span>
+          <span class="nav-label">検索</span>
+        </button>
+        <button class="nav-button" type="button" data-jump="composer" title="投稿">
+          <span class="nav-icon">🍙</span>
+          <span class="nav-label">投稿</span>
+        </button>
+        <button class="nav-button" type="button" data-jump="notifications" title="通知">
+          <span class="nav-icon">🔔</span>
+          <span class="nav-label">通知</span>
+        </button>
+        <button class="nav-button" type="button" data-jump="profile" title="myプロフィール">
+          <span class="nav-icon">👤</span>
+          <span class="nav-label">プロフィール</span>
+        </button>
+      </aside>
+
+      <section class="intro page-section is-active-page" data-page="feed">
+        <div>
+          <p class="eyebrow">Mogu Moment</p>
+          <h2>おいしかった瞬間を、写真つきで気軽に残そう。</h2>
+          <p>
+            投稿前に画像を確認して、明るさや色味を少し整えてから投稿できます。
+            位置情報を付けたり、気に入った投稿を「もぐもぐ」できます。
+          </p>
+          <div class="intro-actions">
+            <button class="ranking-button" type="button" id="rankingButton">ランキングを見る</button>
+            <button class="ranking-button soft" type="button" id="timelineButton">新着順に戻す</button>
+          </div>
+        </div>
+        <div class="intro-counter">
+          <strong id="postCount">0</strong>
+          <span>件の投稿</span>
+        </div>
+      </section>
+
+      <section class="composer page-section" id="composer" data-page="composer" aria-label="ごはんを投稿する">
+        <div class="section-heading">
+          <p class="eyebrow">Post</p>
+          <h2>投稿する</h2>
+        </div>
+
+        <form id="postForm">
+          <label>
+            写真を選ぶ
+            <input id="photoInput" type="file" accept="image/*" />
+          </label>
+
+          <label>
+            タイトル
+            <input id="titleInput" type="text" placeholder="例: ふわふわ卵のオムライス" required />
+          </label>
+
+          <label class="wide">
+            コメント
+            <textarea id="descriptionInput" placeholder="味、場所、また食べたいポイントなど" required></textarea>
+          </label>
+
+          <div class="location-toggle wide">
+            <label class="switch-row">
+              <input id="locationToggle" type="checkbox" />
+              <span>位置情報を付ける</span>
+            </label>
+            <small>お店の名前だけでもOKです。現在地ボタンを押すと地図リンクも付きます。</small>
+          </div>
+
+          <div class="location-fields wide" id="locationFields" hidden>
+            <label>
+              お店・場所の名前
+              <input id="shopNameInput" type="text" placeholder="例: 駅前の定食屋さん" />
+            </label>
+            <div class="location-actions">
+              <button class="secondary-button" type="button" id="getLocationButton">現在地を取得</button>
+              <span id="locationStatus">位置情報はまだ取得していません。</span>
+            </div>
+          </div>
+
+          <div class="image-editor wide" id="imageEditor">
+            <div class="preview-frame">
+              <canvas id="previewCanvas" width="900" height="675" aria-label="投稿画像のプレビュー"></canvas>
+            </div>
+            <div class="editor-controls">
+              <label>
+                明るさ
+                <input id="brightnessInput" type="range" min="70" max="130" value="100" />
+              </label>
+              <label>
+                くっきり
+                <input id="contrastInput" type="range" min="70" max="140" value="105" />
+              </label>
+              <label>
+                彩度
+                <input id="saturationInput" type="range" min="60" max="150" value="110" />
+              </label>
+              <label>
+                あたたかさ
+                <input id="warmthInput" type="range" min="0" max="40" value="10" />
+              </label>
+              <label>
+                文字入れ
+                <input id="overlayTextInput" type="text" placeholder="例: 最高の一杯" />
+              </label>
+              <label>
+                スタンプ
+                <select id="stampSelect">
+                  <option value="">なし</option>
+                  <option value="✨">きらきら</option>
+                  <option value="♡">ハート</option>
+                  <option value="🔥">あつあつ</option>
+                  <option value="🍜">ラーメン</option>
+                  <option value="🍰">スイーツ</option>
+                </select>
+              </label>
+              <div class="editor-buttons">
+                <button class="secondary-button" type="button" id="rotateButton">回転</button>
+                <button class="secondary-button" type="button" id="resetImageButton">リセット</button>
+              </div>
+            </div>
+          </div>
+
+          <button class="primary-button" type="submit">投稿する</button>
+        </form>
+      </section>
+
+      <section class="feed-section page-section is-active-page" id="feedSection" data-page="feed search" aria-label="投稿一覧">
+        <div class="section-heading feed-heading">
+          <div>
+            <p class="eyebrow" id="feedModeLabel">Timeline</p>
+            <h2 id="feedTitle">投稿一覧</h2>
+          </div>
+          <div class="search-tools" id="searchBox">
+            <label class="search-box">
+              <span>検索</span>
+              <input id="searchInput" type="search" placeholder="料理名・コメント・場所で探す" />
+            </label>
+            <button class="category-toggle" type="button" id="categoryToggle" aria-expanded="false" aria-controls="categoryMenu">＋</button>
+            <div class="category-menu" id="categoryMenu" hidden>
+              <button type="button" data-category="ラーメン">ラーメン</button>
+              <button type="button" data-category="焼肉">焼肉</button>
+              <button type="button" data-category="寿司">寿司</button>
+              <button type="button" data-category="カフェ">カフェ</button>
+              <button type="button" data-category="スイーツ">スイーツ</button>
+              <button type="button" data-category="定食">定食</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="feed" id="feed"></div>
+        <p class="empty-state" id="emptyState" hidden>まだ表示できる投稿がありません。</p>
+      </section>
+
+      <section class="notifications page-section" id="notificationsSection" data-page="notifications" aria-label="通知">
+        <div class="section-heading">
+          <p class="eyebrow">Notifications</p>
+          <h2>通知</h2>
+        </div>
+        <div class="notice-crown">
+          <div>
+            <span>王冠までの進み具合</span>
+            <strong id="noticeCrownText">0 / 10</strong>
+          </div>
+          <div class="gauge-track"><span id="noticeCrownGauge"></span></div>
+          <p id="noticeCrownHint">投稿にいいねやリツイートが集まると王冠に近づきます。</p>
+        </div>
+        <div class="notice-list" id="noticeList"></div>
+      </section>
+
+      <section class="profile page-section" id="profileSection" data-page="profile" aria-label="myプロフィール">
+        <div class="section-heading">
+          <p class="eyebrow">My Profile</p>
+          <h2>myプロフィール</h2>
+        </div>
+        <div class="profile-card">
+          <div class="profile-avatar" id="profileAvatar">も</div>
+          <div>
+            <strong id="profileNamePreview">もぐ</strong>
+            <span class="royal-badge" id="profileRoyalBadge">王冠まであと少し</span>
+            <p id="profileBioPreview">投稿したごはんと、もらったいいねをまとめて見られます。</p>
+            <div class="profile-tags">
+              <span id="profileAreaTag">エリア未設定</span>
+              <span id="profileFoodTag">ジャンル未設定</span>
+            </div>
+            <span id="profileStats">投稿 0件 / いいね 0件</span>
+          </div>
+        </div>
+        <div class="profile-progress">
+          <div class="progress-card">
+            <div>
+              <span>もらったいいね</span>
+              <strong id="likesGaugeText">0 / 5</strong>
+            </div>
+            <div class="gauge-track"><span id="likesGauge"></span></div>
+          </div>
+          <div class="progress-card">
+            <div>
+              <span>リツイート</span>
+              <strong id="boostGaugeText">0 / 3</strong>
+            </div>
+            <div class="gauge-track"><span id="boostGauge"></span></div>
+          </div>
+          <div class="progress-card crown-progress">
+            <div>
+              <span>王冠ランク</span>
+              <strong id="crownGaugeText">0 / 10</strong>
+            </div>
+            <div class="gauge-track"><span id="crownGauge"></span></div>
+          </div>
+        </div>
+        <div class="profile-dashboard">
+          <form class="profile-form" id="profileForm">
+            <div class="section-heading compact-heading">
+              <p class="eyebrow">About Me</p>
+              <h3>プロフィール欄</h3>
+            </div>
+            <label>
+              表示名
+              <input id="profileNameInput" type="text" placeholder="例: もぐ" />
+            </label>
+            <label>
+              ID
+              <input id="profileHandleInput" type="text" placeholder="例: mogu" />
+            </label>
+            <label class="wide">
+              自己紹介
+              <textarea id="profileBioInput" placeholder="好きなごはん、投稿スタイル、ひとこと"></textarea>
+            </label>
+            <label>
+              よく行くエリア
+              <select id="profileAreaInput">
+                <option value="">選択してください</option>
+                <option value="渋谷・原宿">渋谷・原宿</option>
+                <option value="新宿">新宿</option>
+                <option value="中目黒・代官山">中目黒・代官山</option>
+                <option value="下北沢">下北沢</option>
+                <option value="横浜">横浜</option>
+              </select>
+            </label>
+            <label>
+              好きなジャンル
+              <select id="profileFoodInput">
+                <option value="">選択してください</option>
+                <option value="ラーメン">ラーメン</option>
+                <option value="焼肉">焼肉</option>
+                <option value="カフェ">カフェ</option>
+                <option value="スイーツ">スイーツ</option>
+                <option value="定食">定食</option>
+              </select>
+            </label>
+            <button class="primary-button" type="submit">プロフィールを保存</button>
+          </form>
+
+          <div class="profile-column">
+            <div class="profile-panel">
+              <div class="section-heading compact-heading">
+                <p class="eyebrow">Saved</p>
+                <h3>保存した投稿</h3>
+              </div>
+              <div class="mini-feed" id="savedPosts"></div>
+              <p class="empty-state" id="savedPostsEmpty" hidden>まだ保存した投稿がありません。</p>
+            </div>
+
+            <div class="profile-panel">
+              <div class="section-heading compact-heading">
+                <p class="eyebrow">My Posts</p>
+                <h3>自分の投稿を振り返る</h3>
+              </div>
+              <div class="mini-feed" id="myPosts"></div>
+              <p class="empty-state" id="myPostsEmpty" hidden>まだ自分の投稿がありません。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings page-section" id="settingsSection" data-page="settings" aria-label="設定">
+        <div class="section-heading">
+          <p class="eyebrow">Settings</p>
+          <h2>設定</h2>
+        </div>
+        <div class="settings-grid">
+          <label class="setting-card">
+            <input id="soundTogglePanel" type="checkbox" />
+            <span>
+              <strong>効果音</strong>
+              <small>いいね、もぐもぐ、投稿のときに小さな音を鳴らします。</small>
+            </span>
+          </label>
+          <button class="setting-card button-card" type="button" id="chromeTogglePanel">
+            <strong>上の画面を隠す/表示</strong>
+            <small>「もぐログ」「投稿する」「削除する」のバーを切り替えます。</small>
+          </button>
+        </div>
+        <div class="legal-links">
+          <a href="terms.html">利用規約</a>
+          <a href="privacy.html">プライバシーポリシー</a>
+        </div>
+      </section>
+    </main>
+
+    <template id="postTemplate">
+      <article class="post-card">
+        <img class="post-image" alt="" />
+        <div class="post-body">
+          <div class="post-meta">
+            <span class="author">mogu</span>
+            <span class="time"></span>
+          </div>
+          <span class="post-royal-badge" hidden>王冠ユーザー</span>
+          <h3></h3>
+          <p></p>
+          <div class="post-location" hidden>
+            <strong class="shop-name"></strong>
+            <a class="map-link" href="#" target="_blank" rel="noreferrer">地図を見る</a>
+          </div>
+          <div class="comment-list"></div>
+          <form class="comment-form">
+            <input class="comment-input" type="text" placeholder="コメントを書く" aria-label="コメントを書く" />
+            <button class="comment-submit" type="submit">送信</button>
+          </form>
+          <div class="post-actions">
+            <button class="like-button" type="button" aria-label="いいねする">
+              <span class="heart">♡</span>
+              <span>いいね</span>
+              <span class="like-count">0</span>
+            </button>
+            <button class="boost-button" type="button" aria-label="もぐもぐする">
+              <span>もぐもぐ</span>
+              <span class="boost-count">0</span>
+            </button>
+            <button class="share-button" type="button">共有</button>
+            <button class="save-button" type="button">保存</button>
+            <button class="report-button" type="button">通報</button>
+            <button class="delete-button" type="button">削除</button>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>

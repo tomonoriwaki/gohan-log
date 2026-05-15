@@ -1,0 +1,18 @@
+{
+  "name": "もぐログ",
+  "short_name": "もぐログ",
+  "description": "おいしかった料理写真を記録して共有するアプリ",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4eadc",
+  "theme_color": "#496b55",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
