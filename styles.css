@@ -626,6 +626,57 @@ textarea:focus {
   line-height: 1.5;
 }
 
+.legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.legal-links a {
+  color: var(--moss);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.document-page {
+  width: min(880px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
+}
+
+.document-card {
+  padding: clamp(20px, 5vw, 44px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.document-card h1,
+.document-card h2 {
+  letter-spacing: 0;
+}
+
+.document-card h1 {
+  margin: 0 0 16px;
+}
+
+.document-card h2 {
+  margin: 28px 0 10px;
+}
+
+.document-card p,
+.document-card li {
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.document-card a {
+  color: var(--moss);
+  font-weight: 900;
+}
+
 .float-heart {
   position: fixed;
   z-index: 100;

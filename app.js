@@ -4,6 +4,7 @@ const SOUND_KEY = "mogu-log-sound-enabled-v1";
 const CHROME_KEY = "mogu-log-chrome-hidden-v1";
 const POSTS_API = "/.netlify/functions/posts";
 const MEDIA_API = "/.netlify/functions/media";
+const FOOD_CHECK_API = "/.netlify/functions/analyze-food";
 const CAN_USE_SHARED_POSTS = location.protocol !== "file:";
 
 const sessionId = getSessionId();
@@ -184,6 +185,33 @@ async function uploadSharedImage(dataUrl) {
   } catch (error) {
     console.warn("画像の共有保存に失敗しました。ローカル画像で続けます。", error);
     return dataUrl;
+  }
+}
+
+async function checkFoodImage(dataUrl) {
+  if (!CAN_USE_SHARED_POSTS) {
+    return { passed: true, reason: "ローカル確認ではAI判定をスキップします。" };
+  }
+
+  try {
+    const response = await fetch(FOOD_CHECK_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dataUrl }),
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      return {
+        passed: false,
+        reason: result.reason || "AI判定の準備ができていないため、投稿できません。",
+      };
+    }
+
+    return result;
+  } catch (error) {
+    console.warn("料理写真のAI判定に失敗しました。", error);
+    return { passed: false, reason: "AI判定に失敗しました。少し待ってからもう一度お試しください。" };
   }
 }
 
@@ -431,6 +459,16 @@ async function createPost(event) {
 
   const fallbackImage = "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?auto=format&fit=crop&w=900&q=80";
   const dataUrl = getPostImageDataUrl();
+
+  if (dataUrl) {
+    const foodCheck = await checkFoodImage(dataUrl);
+
+    if (!foodCheck.passed) {
+      alert(foodCheck.reason || "料理の写真として確認できませんでした。料理がはっきり写った写真を選んでください。");
+      return;
+    }
+  }
+
   const imageUrl = dataUrl ? await uploadSharedImage(dataUrl) : fallbackImage;
   const post = normalizePost({
     id: crypto.randomUUID(),
@@ -643,3 +681,9 @@ elements.soundTogglePanel.checked = soundEnabled;
 setChromeHidden(localStorage.getItem(CHROME_KEY) === "true");
 renderPosts();
 requestSharedPosts();
+
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  navigator.serviceWorker.register("service-worker.js").catch((error) => {
+    console.warn("アプリ化用のService Worker登録に失敗しました。", error);
+  });
+}
